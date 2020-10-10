@@ -1,21 +1,35 @@
 // Include the necessary libraries 
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
-#include <SavLayFilter.h>
+#include <LinkedList.h>
+#include <Gaussian.h>
+#include <GaussianAverage.h>
 #include <Wire.h>
+
+#include "DataAnalysis.h"
+
+
+// Macros during Development
+#define log(x) Serial.print(x)
+#define log_ln(x) Serial.println(x)
+
+// consts that will be used as a thrashold during data analysis 
+const double x_acceleration_thrashold = 2; //* If the x_acceleration is withing +-2 it will not be considered a step
 
 // Instantiate the accelerometer class
 Adafruit_MPU6050 mpu;
 
+// Instantiate all the objects of the Gaussian wrapper to smooth the raw accelerometer data 
+GaussianAverage x_acceleration_average = GaussianAverage(100); //* Average of 100 datapoints to smooth the x accel data
+GaussianAverage y_acceleration_average = GaussianAverage(100); //* Average of 100 datapoints to smooth the y accel data
 
-double z_gyro;
-double last_check = 0;
-double derivative = 0;
 
+// Variables used to preserve the gyro data from one iteration to the next
+double x_acceleration = 0; //* Raw data from the accelerometer on the x axis
+double y_acceleration = 0; //* Raw data from the accelerometer on the y axis
+double last_check = 0;     //* Value to store the acceleration from one iteration to the next (for the derivative calculations)
+double derivative = 0;     //* Value that will store the derivative of the x acceleration in respect to time
 
-//SavLayFilter smallFilter (&value, 0, 5);             //Cubic smoothing with windowsize of 5
-SavLayFilter largeFilter (&z_gyro, 0, 25);            //Cubic smoothing with windowsize of 25
-SavLayFilter derivativeFilter (&derivative, 0, 25); 
 
 
 void setup(void) {
@@ -39,53 +53,57 @@ void setup(void) {
 
 void loop() {
 
-    double z_array[5];
-    double d_array[10];
-
-    for(auto& z:z_array){
+    
+    
         /* Get new sensor events with the readings */
         sensors_event_t accel, gyro, temp;
         mpu.getEvent(&accel, &gyro, &temp);
-        z_gyro = gyro.gyro.z;
+        x_acceleration = accel.acceleration.x;
+        y_acceleration = accel.acceleration.y;
 
         
-        // Print the raw data
-        // Serial.print("Raw_Data:");
-        // Serial.print(z_gyro);
-        
-        // Serial.print(",");
-        
-        // Compute the Savitzky-Golay Filtering Algorithm to smooth the z angular acceleration
-        z_gyro = largeFilter.Compute();
-        z_gyro = largeFilter.Compute();
-        // Serial.print("Smoothed_Data_1:");
-        // Serial.print(z_gyro);
+        // Add the acceleration raw data to the gaussian's datasets to make a new mean 
+        x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
+        y_acceleration_average+=y_acceleration; //* Add to the y_accel dataset 
+            
+        // Process the new gaussian average with the new datapoints added to their respective datasets 
+        x_acceleration_average.process();
+        y_acceleration_average.process();
 
-        // Add the smoothed data to the array
-        z = z_gyro;
-    
+        // Calculate the derivative for the x_acceleration and update the last_check variable for next iteration 
+        derivative = x_acceleration_average.mean - last_check;
+        last_check = x_acceleration_average.mean;
+
+        /*  If the derivative is zero it means it is in a max/min point, we need to check if the x_acceleration
+            is outside the thrashold. If it is outside, we consider it a step, otherwise we consider it just
+            an outlier.
+        */
+        if (derivative == 0 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
+            
+            // calculate the angle based on the y_accel
+            // Send \theta and a step notification to the app
+
+        }
         
+        // Print all the values for plotting and debuging
+        log("x_accel_raw:");
+        log(x_acceleration);
+        log(",");
+
+        log("y_accel_raw:");
+        log(y_acceleration);
+        log(",");
+
+        log("x_average:");
+        log(x_acceleration_average.mean);
+        log(",");
+
+        log("y_average:");
+        log(y_acceleration_average.mean);
+        log(",");
+
+        log("derivative:");
+        log_ln(derivative);
         
-    }
-
-    // Sum the z data and make an average
-    double sum = 0;
-    for(auto& n:z_array){
-        sum+=n;
-    }
-
-    double average = sum/5;
-    Serial.print("Average_5:");
-    Serial.print(average);
-    Serial.print(",");
-
-    derivative = average - last_check;
-    derivative = derivativeFilter.Compute();
-    derivative = derivativeFilter.Compute();
-    derivative = derivativeFilter.Compute();
-    Serial.print("Derivative:");
-    Serial.println(derivative * 10);
-    
-    last_check = average;
     
 }
