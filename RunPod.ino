@@ -7,7 +7,7 @@
 #include <Wire.h>
 
 #include "DataAnalysis.h"
-
+#include "DataSet.h"
 
 // Macros during Development
 #define log(x) Serial.print(x)
@@ -30,6 +30,9 @@ double y_acceleration = 0; //* Raw data from the accelerometer on the y axis
 double last_check = 0;     //* Value to store the acceleration from one iteration to the next (for the derivative calculations)
 double derivative = 0;     //* Value that will store the derivative of the x acceleration in respect to time
 
+// Data sets that will be used to store raw values of the accel module so we can have acces to the actual max values
+Data_Set<double,100> raw_x_dataset; //* Will store the actual raw values for the x accelerometer
+Data_Set<double,100> raw_y_dataset; //* Will store the actual raw values for the y accelerometer
 
 
 void setup(void) {
@@ -54,56 +57,58 @@ void setup(void) {
 void loop() {
 
     
+    /* Get new sensor events with the readings */
+    sensors_event_t accel, gyro, temp;
+    mpu.getEvent(&accel, &gyro, &temp);
+    x_acceleration = accel.acceleration.x;
+    y_acceleration = accel.acceleration.y;
+
+    // Add the raw accelerometer data to the dataset for future analysis
+    raw_x_dataset.push_back(x_acceleration);
+    raw_y_dataset.push_back(y_acceleration);
     
-        /* Get new sensor events with the readings */
-        sensors_event_t accel, gyro, temp;
-        mpu.getEvent(&accel, &gyro, &temp);
-        x_acceleration = accel.acceleration.x;
-        y_acceleration = accel.acceleration.y;
-
+    // Add the acceleration raw data to the gaussian's datasets to make a new mean 
+    x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
+    y_acceleration_average+=y_acceleration; //* Add to the y_accel dataset 
         
-        // Add the acceleration raw data to the gaussian's datasets to make a new mean 
-        x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
-        y_acceleration_average+=y_acceleration; //* Add to the y_accel dataset 
-            
-        // Process the new gaussian average with the new datapoints added to their respective datasets 
-        x_acceleration_average.process();
-        y_acceleration_average.process();
+    // Process the new gaussian average with the new datapoints added to their respective datasets 
+    x_acceleration_average.process();
+    y_acceleration_average.process();
 
-        // Calculate the derivative for the x_acceleration and update the last_check variable for next iteration 
-        derivative = x_acceleration_average.mean - last_check;
-        last_check = x_acceleration_average.mean;
+    // Calculate the derivative for the x_acceleration and update the last_check variable for next iteration 
+    derivative = x_acceleration_average.mean - last_check;
+    last_check = x_acceleration_average.mean;
 
-        /*  If the derivative is zero it means it is in a max/min point, we need to check if the x_acceleration
-            is outside the thrashold. If it is outside, we consider it a step, otherwise we consider it just
-            an outlier.
-        */
-        if (derivative == 0 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
-            
-            // calculate the angle based on the y_accel
-            // Send \theta and a step notification to the app
-
-        }
+    /*  If the derivative is zero it means it is in a max/min point, we need to check if the x_acceleration
+        is outside the thrashold. If it is outside, we consider it a step, otherwise we consider it just
+        an outlier.
+    */
+    if (derivative == 0 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
         
-        // Print all the values for plotting and debuging
-        log("x_accel_raw:");
-        log(x_acceleration);
-        log(",");
+        // calculate the angle based on the y_accel
+        // Send \theta and a step notification to the app
 
-        log("y_accel_raw:");
-        log(y_acceleration);
-        log(",");
+    }
+    
+    // Print all the values for plotting and debuging
+    log("x_accel_raw:");
+    log(x_acceleration);
+    log(",");
 
-        log("x_average:");
-        log(x_acceleration_average.mean);
-        log(",");
+    log("y_accel_raw:");
+    log(y_acceleration);
+    log(",");
 
-        log("y_average:");
-        log(y_acceleration_average.mean);
-        log(",");
+    log("x_average:");
+    log(x_acceleration_average.mean);
+    log(",");
 
-        log("derivative:");
-        log_ln(derivative);
+    log("y_average:");
+    log(y_acceleration_average.mean);
+    log(",");
+
+    log("derivative:");
+    log_ln(derivative);
         
     
 }
