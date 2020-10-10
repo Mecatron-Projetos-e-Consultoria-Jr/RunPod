@@ -6,6 +6,15 @@ class Data_Set{
     private:
         int n_elements = 0;
         std::array<T,size> data;
+
+        // returns the module of the number
+        inline module(T data_point){
+            if(data_point<0)
+                return -1*data_point
+            else
+                return data_point
+        }
+
     public:
         
         // Add the data_point to the end of the data_set and removes the first element if above the desired
@@ -44,5 +53,21 @@ class Data_Set{
                 // Update the data array to the new array
                 data = new_array;
             }
+        }
+
+        // Find the datapoint with greatest absolute value 
+        T max_value(){
+            T max = 0;
+
+            // Iterate though the data set
+            for(auto& data_point:data){
+                // If the absolute value of the data_point is greater than the absolute value of the previous
+                // max, set the data_point as current max
+                if(module(data_point) > module(max)){
+                    max = data_point
+                }
+            }
+
+            return max;
         }
 };
