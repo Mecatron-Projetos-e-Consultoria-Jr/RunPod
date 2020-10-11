@@ -16,7 +16,9 @@ class Data_Set{
         }
 
     public:
-        
+        Data_Set(){
+            data.fill(0);
+        }
         // Add the data_point to the end of the data_set and removes the first element if above the desired
         // size
         void push_back(T data_point){
