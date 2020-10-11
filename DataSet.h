@@ -8,11 +8,11 @@ class Data_Set{
         std::array<T,size> data;
 
         // returns the module of the number
-        inline module(T data_point){
+        inline T module(T data_point){
             if(data_point<0)
-                return -1*data_point
+                return -1*data_point;
             else
-                return data_point
+                return data_point;
         }
 
     public:
@@ -64,10 +64,19 @@ class Data_Set{
                 // If the absolute value of the data_point is greater than the absolute value of the previous
                 // max, set the data_point as current max
                 if(module(data_point) > module(max)){
-                    max = data_point
+                    max = data_point;
                 }
             }
 
             return max;
+        }
+
+        // Find the average for the data set
+        double average(T divider){
+            T sum = 0;
+            for(auto&data_point:data){
+                sum+=data_point;
+            }
+            return sum/divider;
         }
 };
