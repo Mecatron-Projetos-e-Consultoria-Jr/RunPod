@@ -5,6 +5,7 @@
 #include <Gaussian.h>
 #include <GaussianAverage.h>
 #include <Wire.h>
+#include <cmath>
 
 #include "DataAnalysis.h"
 #include "DataSet.h"
@@ -21,7 +22,7 @@ Adafruit_MPU6050 mpu;
 
 // Instantiate all the objects of the Gaussian wrapper to smooth the raw accelerometer data 
 GaussianAverage x_acceleration_average = GaussianAverage(100); //* Average of 100 datapoints to smooth the x accel data
-GaussianAverage y_acceleration_average = GaussianAverage(100); //* Average of 100 datapoints to smooth the y accel data
+GaussianAverage y_acceleration_average = GaussianAverage(250); //* Average of 100 datapoints to smooth the y accel data
 
 
 // Variables used to preserve the gyro data from one iteration to the next
@@ -31,9 +32,30 @@ double last_check = 0;     //* Value to store the acceleration from one iteratio
 double derivative = 0;     //* Value that will store the derivative of the x acceleration in respect to time
 
 // Data sets that will be used to store raw values of the accel module so we can have acces to the actual max values
-Data_Set<double,100> raw_x_dataset; //* Will store the actual raw values for the x accelerometer
 Data_Set<double,100> raw_y_dataset; //* Will store the actual raw values for the y accelerometer
 
+void compute_acceleration(){
+
+    /* Get new sensor events with the readings */
+    sensors_event_t accel, gyro, temp;
+    mpu.getEvent(&accel, &gyro, &temp);
+    x_acceleration = accel.acceleration.x;
+    y_acceleration = accel.acceleration.y;
+
+    
+    // Add the acceleration raw data to the gaussian's datasets to make a new mean 
+    x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
+    y_acceleration_average+=y_acceleration; //* Add to the y_accel dataset 
+        
+    // Process the new gaussian average with the new datapoints added to their respective datasets 
+    x_acceleration_average.process();
+    y_acceleration_average.process();
+
+    
+    // Calculate the derivative for the x_acceleration and update the last_check variable for next iteration 
+    derivative = x_acceleration_average.mean - last_check;
+    last_check = x_acceleration_average.mean;
+}
 
 void setup(void) {
 
@@ -56,59 +78,64 @@ void setup(void) {
 
 void loop() {
 
-    
-    /* Get new sensor events with the readings */
-    sensors_event_t accel, gyro, temp;
-    mpu.getEvent(&accel, &gyro, &temp);
-    x_acceleration = accel.acceleration.x;
-    y_acceleration = accel.acceleration.y;
-
-    // Add the raw accelerometer data to the dataset for future analysis
-    raw_x_dataset.push_back(x_acceleration);
-    raw_y_dataset.push_back(y_acceleration);
-    
-    // Add the acceleration raw data to the gaussian's datasets to make a new mean 
-    x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
-    y_acceleration_average+=y_acceleration; //* Add to the y_accel dataset 
-        
-    // Process the new gaussian average with the new datapoints added to their respective datasets 
-    x_acceleration_average.process();
-    y_acceleration_average.process();
-
-    // Calculate the derivative for the x_acceleration and update the last_check variable for next iteration 
-    derivative = x_acceleration_average.mean - last_check;
-    last_check = x_acceleration_average.mean;
+    // Get the data from the accelerometer
+    compute_acceleration();
 
     /*  If the derivative is zero it means it is in a max/min point, we need to check if the x_acceleration
         is outside the thrashold. If it is outside, we consider it a step, otherwise we consider it just
         an outlier.
     */
-    if (derivative == 0 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
+    if (std::abs(floor(derivative)) == 0.00 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
         
-        // calculate the angle based on the y_accel
+        Data_Set<double, 50> cos_dataset;
+
+        while (std::abs(floor(derivative)) == 0.0)
+        {
+            // Add the data point to the array 
+            cos_dataset.push_back(y_acceleration_average.mean/9.81);
+
+            // Get the new data points from the accelerometer
+            compute_acceleration();
+        }
+        
+        //* calculate the angle based on the y_accel *//
+        
+        // !!!!! If the cos theta is outside the domain of acos it means that it's an outlier !!!!! //
+        double cos_theta = cos_dataset.max_value();
+        if(cos_theta <= 1 && cos_theta >=-1){
+        
+            // We know that the angle is the arccos of max_y / 9.81
+            double theta = acos(cos_theta);
+
+            log("Angle:");
+            log_ln(theta);
+            delay(100);
+            
+        }
+    
         // Send \theta and a step notification to the app
 
     }
     
     // Print all the values for plotting and debuging
-    log("x_accel_raw:");
-    log(x_acceleration);
-    log(",");
+    // log("x_accel_raw:");
+    // log(x_acceleration);
+    // log(",");
 
-    log("y_accel_raw:");
-    log(y_acceleration);
-    log(",");
+    // log("y_accel_raw:");
+    // log(y_acceleration);
+    // log(",");
 
-    log("x_average:");
-    log(x_acceleration_average.mean);
-    log(",");
+    // log("x_average:");
+    // log(x_acceleration_average.mean);
+    // log(",");
 
-    log("y_average:");
-    log(y_acceleration_average.mean);
-    log(",");
+    // log("y_average:");
+    // log(y_acceleration_average.mean);
+    // log(",");
 
-    log("derivative:");
-    log_ln(derivative);
-        
+    // log("derivative:");
+    // log_ln(derivative);
+     
     
 }
