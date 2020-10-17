@@ -112,8 +112,6 @@ contents={%
         giroscópio e um acelerômetro embutidos. 
     
         \subsection*{Acelerômetro}
-            Para nossa aplicação de deteção de passos utilizaremos somente as capacidades de acelerômetro do
-            MPU6050.
             Um acelerômetro é capaz de determinar a aceleração gravitacional linear sofrida por um corpo em todas as 3
             dimensões $(x,y,z)$. Como o usuário estará sempre na vertical a componente $G_z$ (componente da
             aceleração gravitacional no eixo $z$) terá variação mínima e insignificante para a detectação dos
@@ -123,6 +121,7 @@ contents={%
             \begin{figure}[h!]
                 \centering
                 \includegraphics[width=.7\textwidth]{img/Screen Shot 2020-10-06 at 8.17.44 PM.png}
+                \caption{Figura ilustrando a decomposição vetorial da aceleração gravitacional}
             \end{figure}
         
    
@@ -138,6 +137,34 @@ contents={%
             Tendo o valor de $\theta$ e tendo a altura do usuário seremos capaz de determinarmos a distância
             percorrida pelo usuário pela meia passada dada. Com isso conseguimos somar duas meia passadas
             seguidas e achar o $\Delta S$ de cada passo que o usuário dá.
+
+        \subsection*{Giroscópio}
+            O giroscópio embutido no MPU6050 é capaz de medir a velocidade angular $\omega_{rads/s}$ que sofre nas três
+            dimensões canônicas $(x,y,z)$, como mostra a figura \ref{fig:gyro}.
+
+            \begin{figure}[h!]
+                \vspace{10px}
+                \centering
+                \includegraphics[width=0.5\textwidth]{img/Gyro-Fig-01.png}
+                \caption{Figura Ilustrativa dos eixos de medição do MPU6050 no modo gyro.}
+                \label{fig:gyro}
+            \end{figure}
+            
+            Levando em consideração que o dispositivo estará localizado na parte lateral da perna do usuário
+            com o giroscópio orientado de tal forma que o vetor \textit{TOP} estará perpendicular ao vetor
+            deslocamento (em outras palavras, que parte \textit{TOP} do sensor estará apontando para ``fora''
+            da perna do usuário), conseguimos determinar o exato momento que o usuário dá uma passada pois sua
+            aceleração angular do eixo $z$ (rotação com o vetor \textit{TOP} como eixo) terá passado por um
+            máximo e estará no valor zero (pois é no exato momento que o movimento da perna muda de direção).
+            
+            Em suma, para que o usuário de uma passada sua perna precisa fazer um movimento análogo à um
+            pêndulo, que tem velocidade angular positiva no início (pois está indo na direção horário) e,
+            quando chega no local onde sua perna está mais esticada e seu pé acaba de impactar o solo, tem
+            velocidade zero, pois é no exato momento da mudança de direção. Somos então capazes de detectar
+            (através do giroscópio), o momento exato onde essa aceleração angular é zero, e então computamos
+            como um passo.
+        \newpage
+
 
         \section{Processamento de Sinal}
             O sensor MPU6050 é extremamente sensível (como demonstra a imagem \ref{img:raw_plot}) o que se demonstra algo
@@ -165,12 +192,13 @@ contents={%
             \end{figure}
 
         \section{Deteção de Passos}
-        Fazendo o estudo do comportamento dos valores de $G_x$ retornados pelo acelerômetro vemos que, assim
+        Fazendo o estudo dos comportamentos dos valores de $G_x$(aceleração gravitacional no eixo $x$) e de
+        $\omega_z$(velocidade angular no eixo de rotação $z$) retornados pelo MPU6050 vemos que, assim
         que o usuário está com sua perna na posição mais esticada (assim que ocorre o contato entre o
-        calcanhar com o chão) ,temos que a componente $G_x$  assume seu valor máximo. Tendo isso em mente,
-        precisamos somente identificar quando $G_x$ é um máximo local, computar um passo dado, utilizar a
-        equação \ref{eq:arccos_theta} para calcular o ângulo $\theta$ e, por conseguinte, $\Delta S$ da
-        passada.
+        calcanhar com o chão) ,temos que a componente $G_x$  assume seu valor máximo e o valor de $\omega_z$ é
+        igual a zero. Tendo isso em mente, precisamos somente identificar quando $G_x$ é um máximo local e
+        $\omega_z=0$, computar um passo dado, utilizar a equação \ref{eq:arccos_theta} para calcular o ângulo 
+        $\theta$ e, por conseguinte, $\Delta S$ da passada.
 
         Para detectarmos se $G_x$ é um máximo local podemos simplesmente calcularmos a derivada $G_x'$. A
         derivada nada mais é do que a inclinação da reta tangente a um ponto de uma função (no caso da função $G_x'(t)$).
@@ -180,4 +208,9 @@ contents={%
         \begin{align}
             G_x(t) = G_{x_{Max}} \iff G_x'(t) = 0
         \end{align}
+
+        No cenário onde o usuário está parado, todos os pré-requisitos listados acima estariam sendo
+        contemplados e, mesmo com o usuário não se movimentando, passos estariam sendo computados. A fim de
+        desconsiderarmos tais erros, foi estipulado um valor mínimo de threshold que a aceleração $G_x$ deve
+        assumir para que seja considerado  um passo.
 \end{document}
