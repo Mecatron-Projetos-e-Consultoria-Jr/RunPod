@@ -7,6 +7,14 @@
 #include <Wire.h>
 #include <cmath>
 
+/// WiFi webserver connection /// 
+//#include <WiFi.h>
+//#include <HTTPClient.h>
+// 
+//const char* ssid = "Vivo-6464";
+//const char* password = "C6624A6464";
+
+
 #include "DataAnalysis.h"
 #include "DataSet.h"
 
@@ -15,7 +23,7 @@
 #define log_ln(x) Serial.println(x)
 
 // consts that will be used as a thrashold during data analysis 
-const double x_acceleration_thrashold = 2; //* If the x_acceleration is withing +-2 it will not be considered a step
+const double x_acceleration_thrashold = 1; //* If the x_acceleration is withing +-2 it will not be considered a step
 
 // Instantiate the accelerometer class
 Adafruit_MPU6050 mpu;
@@ -62,7 +70,8 @@ void compute_acceleration(){
 
 void setup(void) {
 
-    Serial.begin(115200);
+//    Serial.begin(115200);
+//    WiFi.begin(ssid, password);
 
     // Try to initialize, if it fails it will continue to try and throw an error message
     if (!mpu.begin()) {
@@ -107,6 +116,11 @@ void loop() {
      }
 
         // Now we can take the max value of the cos and find the angle 
+//        HTTPClient http;
+//        http.begin("http://192.168.15.3:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
+//        int http_code = http.GET();
+
+
         log("Theta:");
         log_ln(std::acos(angle_dataset.max_value()));
 
@@ -116,28 +130,28 @@ void loop() {
    
     
     // Print all the values for plotting and debuging
-    // log("x_accel_raw:");
-    // log(x_acceleration);
-    // log(",");
+     log("x_accel_raw:");
+     log(x_acceleration);
+     log(",");
 
-    // log("y_accel_raw:");
-    // log(y_acceleration);
-    // log(",");
+     log("y_accel_raw:");
+     log(y_acceleration);
+     log(",");
 
-    // log("x_average:");
-    // log(x_acceleration_average.mean);
-    // log(",");
+     log("x_average:");
+     log(x_acceleration_average.mean);
+     log(",");
 
-    // log("y_average:");
-    // log(y_acceleration_average.mean);
-    // log(",");
+     log("y_average:");
+     log(y_acceleration_average.mean);
+     log(",");
 
-    // log("z_velocity:");
-    // log(z_velocity_average.mean);
-    // log(",");
+     log("z_velocity:");
+     log(z_velocity_average.mean);
+     log(",");
 
-    // log("derivative:");
-    // log_ln(derivative);
+     log("derivative:");
+     log_ln(derivative);
      
     
 }
