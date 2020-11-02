@@ -8,11 +8,11 @@
 #include <cmath>
 
 /// WiFi webserver connection /// 
-//#include <WiFi.h>
-//#include <HTTPClient.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 // 
-//const char* ssid = "Vivo-6464";
-//const char* password = "C6624A6464";
+const char* ssid = "VIVO-6464";
+const char* password = "C6624A6464";
 
 
 #include "DataAnalysis.h"
@@ -24,6 +24,7 @@
 
 // consts that will be used as a thrashold during data analysis 
 const double x_acceleration_thrashold = 1; //* If the x_acceleration is withing +-2 it will not be considered a step
+const double z_velocity_thrashold = 0.3;
 
 // Instantiate the accelerometer class
 Adafruit_MPU6050 mpu;
@@ -70,8 +71,8 @@ void compute_acceleration(){
 
 void setup(void) {
 
-//    Serial.begin(115200);
-//    WiFi.begin(ssid, password);
+    Serial.begin(115200);
+    WiFi.begin(ssid, password);
 
     // Try to initialize, if it fails it will continue to try and throw an error message
     if (!mpu.begin()) {
@@ -98,10 +99,10 @@ void loop() {
         If the angular velocity is zero and the x_acceleration is outside the "Normal" thrashold, 
         count as a step and calculate the angle 
     */
-   if ( std::abs(floor(z_velocity_average.mean)) == 0.00 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){       
+   if (Data_Analysis::inside_thrashold(z_velocity_average.mean, z_velocity_thrashold) && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){       
 
         // Some times it returns multiple values for one step, so save them and only utilize the maximun one
-        while ( std::abs(floor(z_velocity_average.mean)) == 0.00 && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
+        while ( Data_Analysis::inside_thrashold(z_velocity_average.mean, z_velocity_thrashold) && !Data_Analysis::inside_thrashold(x_acceleration_average.mean, x_acceleration_thrashold)){
             
             //!! To avoid counting outliers, only register values inside the domain of the arccos function (i.e -1,1) //!!
             double cos_theta = y_acceleration_average.mean/9.81;
@@ -116,11 +117,11 @@ void loop() {
      }
 
         // Now we can take the max value of the cos and find the angle 
-//        HTTPClient http;
-//        http.begin("http://192.168.15.3:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
-//        int http_code = http.GET();
+       HTTPClient http;
+       http.begin("http://192.168.15.3:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
+       int http_code = http.GET();
 
-
+        log_ln("http://192.168.15.3:5000/send_data/data="+String(std::acos(angle_dataset.max_value())));
         log("Theta:");
         log_ln(std::acos(angle_dataset.max_value()));
 
