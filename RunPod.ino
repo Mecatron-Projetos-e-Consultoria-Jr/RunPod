@@ -24,7 +24,7 @@ const char* password = "C6624A6464";
 
 // consts that will be used as a thrashold during data analysis 
 const double x_acceleration_thrashold = 1; //* If the x_acceleration is withing +-2 it will not be considered a step
-const double z_velocity_thrashold = 0.3;
+const double z_velocity_thrashold = 0.1;
 
 // Instantiate the accelerometer class
 Adafruit_MPU6050 mpu;
@@ -52,7 +52,7 @@ void compute_acceleration(){
     mpu.getEvent(&accel, &gyro, &temp);
     x_acceleration = accel.acceleration.x;
     y_acceleration = accel.acceleration.y;
-    z_velocity = gyro.gyro.z;
+    z_velocity = gyro.gyro.z; // y for feet and z for leg
     
     // Add the acceleration raw data to the gaussian's datasets to make a new mean 
     x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
@@ -118,10 +118,10 @@ void loop() {
 
         // Now we can take the max value of the cos and find the angle 
        HTTPClient http;
-       http.begin("http://192.168.15.3:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
+       http.begin("http://192.168.15.7:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
        int http_code = http.GET();
 
-        log_ln("http://192.168.15.3:5000/send_data/data="+String(std::acos(angle_dataset.max_value())));
+        log_ln("http://192.168.15.7:5000/send_data/data="+String(std::acos(angle_dataset.max_value())));
         log("Theta:");
         log_ln(std::acos(angle_dataset.max_value()));
 
