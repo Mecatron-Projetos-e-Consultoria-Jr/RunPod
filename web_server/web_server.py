@@ -29,7 +29,10 @@ def create_file(name:str):
     if name in files_in_directory:
         raise ValueError(colored('FILE ALREADY EXISTS: '+name, 'red'))
     else:
-        os.system('touch '+name)
+        # os.system('touch '+name)
+        with open(name, 'w') as _:
+            ...
+
 
 if __name__ == '__main__':
 
