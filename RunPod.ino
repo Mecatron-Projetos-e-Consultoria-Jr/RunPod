@@ -8,11 +8,11 @@
 #include <cmath>
 
 /// WiFi webserver connection /// 
-#include <WiFi.h>
-#include <HTTPClient.h>
-// 
-const char* ssid = "VIVO-6464";
-const char* password = "C6624A6464";
+// #include <WiFi.h>
+// #include <HTTPClient.h>
+// // 
+// const char* ssid = "VIVO-6464";
+// const char* password = "C6624A6464";
 
 
 #include "DataAnalysis.h"
@@ -52,7 +52,8 @@ void compute_acceleration(){
     mpu.getEvent(&accel, &gyro, &temp);
     x_acceleration = accel.acceleration.x;
     y_acceleration = accel.acceleration.y;
-    z_velocity = gyro.gyro.z; // y for feet and z for leg
+    z_velocity = gyro.gyro.z; // z for leg
+    // z_velocity = gyro.gyro.y; // y for feet
     
     // Add the acceleration raw data to the gaussian's datasets to make a new mean 
     x_acceleration_average+=x_acceleration; //* Add to the x_accel dataset 
@@ -72,7 +73,7 @@ void compute_acceleration(){
 void setup(void) {
 
     Serial.begin(115200);
-    WiFi.begin(ssid, password);
+    // WiFi.begin(ssid, password);
 
     // Try to initialize, if it fails it will continue to try and throw an error message
     if (!mpu.begin()) {
@@ -117,11 +118,11 @@ void loop() {
      }
 
         // Now we can take the max value of the cos and find the angle 
-       HTTPClient http;
-       http.begin("http://192.168.15.7:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
-       int http_code = http.GET();
+       //HTTPClient http;
+       //http.begin("http://192.168.15.7:5000/send_data/data="+String(std::acos(angle_dataset.max_value()))); //Specify the URL
+       //int http_code = http.GET();
 
-        log_ln("http://192.168.15.7:5000/send_data/data="+String(std::acos(angle_dataset.max_value())));
+        //log_ln("http://192.168.15.7:5000/send_data/data="+String(std::acos(angle_dataset.max_value())));
         log("Theta:");
         log_ln(std::acos(angle_dataset.max_value()));
 
@@ -131,28 +132,28 @@ void loop() {
    
     
     // Print all the values for plotting and debuging
-     log("x_accel_raw:");
-     log(x_acceleration);
-     log(",");
+    //  log("x_accel_raw:");
+    //  log(x_acceleration);
+    //  log(",");
 
-     log("y_accel_raw:");
-     log(y_acceleration);
-     log(",");
+    //  log("y_accel_raw:");
+    //  log(y_acceleration);
+    //  log(",");
 
-     log("x_average:");
-     log(x_acceleration_average.mean);
-     log(",");
+    //  log("x_average:");
+    //  log(x_acceleration_average.mean);
+    //  log(",");
 
-     log("y_average:");
-     log(y_acceleration_average.mean);
-     log(",");
+    //  log("y_average:");
+    //  log(y_acceleration_average.mean);
+    //  log(",");
 
-     log("z_velocity:");
-     log(z_velocity_average.mean);
-     log(",");
+    //  log("z_velocity:");
+    //  log(z_velocity_average.mean);
+    //  log(",");
 
-     log("derivative:");
-     log_ln(derivative);
+    //  log("derivative:");
+    //  log_ln(derivative);
      
     
 }
