@@ -1,43 +1,28 @@
 from flask import Flask
-from termcolor import colored
+import json
 import time
-import sys
 import os
-
-# Get the argument from the commandline
-csv_file = sys.argv[1]
 
 # instantiate the Flask server
 app = Flask(__name__)
 
-@app.route('/send_data/data=<data>', methods=['GET'])
-def save_data(data):
-
-    global csv_file
+@app.route('/send_data/x_acce=<x_acceleration>/y_acce=<y_acceleration>/z_vel=<z_velocity>', methods=['GET'])
+def save_data(x_acceleration,y_acceleration,z_velocity):
     
-    # Open the desired file in append mode and add the nex line 'time,data'
-    with open(csv_file, 'a') as csv:
-        csv.write(str(time.time())+','+data+'\n')
-
-    return 'ok'
+    log_to_file(x_acceleration+','+y_acceleration+','+z_velocity)
 
 
+def log_to_file(data:str):
 
-def create_file(name:str):
-    # check to see if the name of the file passed already existis (to avoid overwriting)
-    files_in_directory = os.listdir()
-    if name in files_in_directory:
-        raise ValueError(colored('FILE ALREADY EXISTS: '+name, 'red'))
-    else:
-        # os.system('touch '+name)
-        with open(name, 'w') as _:
-            ...
-
+    # try to append to the file, if there is an error, most probably there is no file with the name 
+    try:
+        with open('log_file.csv','a') as log_file:
+            log_file.write(data)
+    except:
+        with open('log_file.csv','w') as log_file:
+            log_file.write(data)
 
 if __name__ == '__main__':
-
-    # Create a file with the name passed as parameter
-    create_file(csv_file)
 
     # run webserver
     app.run(host='0.0.0.0')
