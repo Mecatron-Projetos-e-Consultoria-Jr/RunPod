@@ -9,8 +9,8 @@ app = Flask(__name__)
 @app.route('/send_data/x_acce=<x_acceleration>/y_acce=<y_acceleration>/z_vel=<z_velocity>', methods=['GET'])
 def save_data(x_acceleration,y_acceleration,z_velocity):
     
-    log_to_file(x_acceleration+','+y_acceleration+','+z_velocity)
-
+    log_to_file(str(time.time())+','+x_acceleration+','+y_acceleration+','+z_velocity+'\n')
+    return 'roger'
 
 def log_to_file(data:str):
 

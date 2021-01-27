@@ -1,30 +1,20 @@
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import subprocess
-import sys 
+from scipy.ndimage import gaussian_filter
+import json
 
-fig = plt.figure()
-ax1 = fig.add_subplot(1,1,1)
+with open('log_file.csv', 'r') as data_file:
+    
+    raw_data = data_file.read()
+    raw_data = raw_data.split('\n')[:-1]
 
-def animate(i):
-
-    # read the file passed in the argument
-    lines = subprocess.check_output(['tail', '-n', '1000', sys.argv[1]]).decode()
-    csv_data = lines.split('\n')
-    x_data = []
-    y_data = []
-
-    for line in csv_data:
-        if line == '':
-            continue
-        x,y = line.split(',')
-        print(x,y)
-        x_data.append(float(x))
-        y_data.append(float(y))
-
-    ax1.clear()
-    ax1.plot(x_data[-250:],y_data[-250:])
-
-
-ani = animation.FuncAnimation(fig,animate,interval=1)
-plt.show()
+    time = [float(line.split(',')[0]) for line in raw_data]
+    x_acceleration = [float(line.split(',')[1]) for line in raw_data]
+    y_acceleration = [float(line.split(',')[2]) for line in raw_data]
+    z_velocity = [float(line.split(',')[3]) for line in raw_data]
+    
+    plt.plot(time,x_acceleration,label='x_acceleration')
+    plt.plot(time, gaussian_filter(x_acceleration,sigma=5), label='x_gaussian')
+    # plt.plot(time,y_acceleration,label='y_acceleration')
+    # plt.plot(time,z_velocity,label='z_velocity')
+    plt.legend(loc="upper left")
+    plt.show()

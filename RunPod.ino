@@ -69,7 +69,7 @@ void loop() {
     
     // Send the data to the local webserver 
     HTTPClient http;
-    http.begin("http://190.168.3/send_data/x_acce="+String(x_acceleration)+"/y_acce="+String(y_acceleration)+"/z_vel="+String(z_velocity));
+    http.begin("http://192.168.15.12:5000/send_data/x_acce="+String(x_acceleration)+"/y_acce="+String(y_acceleration)+"/z_vel="+String(z_velocity));
     int status_code = http.GET();
-     
+    delay(200);
 }
