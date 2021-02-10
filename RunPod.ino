@@ -1,75 +1,51 @@
-// Include the necessary libraries 
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
-#include <Wire.h>
+#include "AtTinyMpu6050.h"
+#include "SoftwareSerial.h"
 
+SoftwareSerial ble_device(3, 1); // BLE TX-> ATtiny85 PB0, BLE RX-> ATtiny85 PB1
+AtTinyMpu6050 mpu;
 
-/// WiFi webserver connection /// 
-#include <WiFi.h>
-#include <HTTPClient.h>
+void setup()
+{
+    // Begin the MPU6050 with the default values
+    mpu.Begin();
 
-const char* ssid = "VIVO-6464";
-const char* password = "C6624A6464";
+    // Start the BLE module
+    ble_device.begin(9600); // start BEL device
+    delay(500);             // wait until BLE device starts
 
+    ble_device.println("AT+NAMERunPod"); // change device name
+    delay(500);                          // wait for change
 
-
-// Macros during Development
-#define log(x) Serial.print(x)
-#define log_ln(x) Serial.println(x)
-
-
-// Instantiate the accelerometer class
-Adafruit_MPU6050 mpu;
-
-
-// Variables used to preserve the gyro data from one iteration to the next
-double x_acceleration = 0; //* Raw data from the accelerometer on the x axis
-double y_acceleration = 0; //* Raw data from the accelerometer on the y axis
-double z_velocity = 0;     //* Raw data from the gyroscope
-
-
-
-
-void compute_acceleration(){
-
-    /* Get new sensor events with the readings */
-    sensors_event_t accel, gyro, temp;
-    mpu.getEvent(&accel, &gyro, &temp);
-    x_acceleration = accel.acceleration.x;
-    y_acceleration = accel.acceleration.y;
-    z_velocity = gyro.gyro.y; // y for feet
-
-    
+    ble_device.println("AT+RESET"); // reset module to enact name change
+    delay(1000);                    // wait for reset
 }
+void loop()
+{
+    // Get the data from the MPU6050
+    AtTinyMpu6050::RawData raw_data = mpu.GetRawData();
 
-void setup(void) {
+    ble_device.print("x_accel:");
+    ble_device.println(raw_data.x_acceleration);
+    delay(100);
 
-    Serial.begin(115200);
-    WiFi.begin(ssid, password);
+    ble_device.print("y_accel:");
+    ble_device.println(raw_data.y_acceleration);
+    delay(100);
 
-    // Try to initialize, if it fails it will continue to try and throw an error message
-    if (!mpu.begin()) {
-        Serial.println("Failed to find MPU6050 chip");
-        while (1) {
-        delay(10);
-        }
-    }
+    ble_device.print("z_accel:");
+    ble_device.println(raw_data.z_acceleration);
+    delay(100);
 
-    // Set all the default values for the accelerometer parameters 
-    mpu.setAccelerometerRange(MPU6050_RANGE_16_G);
-    mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-    mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+    ble_device.print("x_v:");
+    ble_device.println(raw_data.x_velocity);
+    delay(100);
 
-}
+    ble_device.print("y_v:");
+    ble_device.println(raw_data.y_velocity);
+    delay(100);
 
-void loop() {
+    ble_device.print("z_v:");
+    ble_device.println(raw_data.z_velocity);
+    delay(100);
 
-    // Get the data from the accelerometer
-    compute_acceleration();
-    
-    // Send the data to the local webserver 
-    HTTPClient http;
-    http.begin("http://192.168.15.12:5000/send_data/x_acce="+String(x_acceleration)+"/y_acce="+String(y_acceleration)+"/z_vel="+String(z_velocity));
-    int status_code = http.GET();
-    delay(200);
 }
