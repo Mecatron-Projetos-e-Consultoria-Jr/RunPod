@@ -22,7 +22,8 @@ AtTinyMpu6050::RawData AtTinyMpu6050::GetRawData()
 {
     AtTinyMpu6050::RawData data;
     double temp; //Make it a local variable since we don't need it
-
+    double velocity;
+    
     TinyWireM.beginTransmission(registry_memory_); //I2C address of the MPU
     TinyWireM.write(0x3B);                         //  Acceleration data register
     TinyWireM.endTransmission();

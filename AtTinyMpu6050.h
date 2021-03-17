@@ -2,12 +2,13 @@
 #include "TinyWireM.h"
 #include <stdio.h>
 
+
+
 class AtTinyMpu6050
 {
 public:
-    class RawData
+    struct RawData
     {
-    public:
         double x_acceleration, y_acceleration, z_acceleration;
         double x_velocity, y_velocity, z_velocity;
     };
