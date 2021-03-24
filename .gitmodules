@@ -1,0 +1,3 @@
+[submodule "ESP32_BLE"]
+	path = ESP32_BLE
+	url = https://github.com/Pedro4064/ESP32_BLE
