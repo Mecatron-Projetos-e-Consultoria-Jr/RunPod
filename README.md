@@ -1,20 +1,24 @@
-![](./Docs/img/RUN_POD.png)
+![](./Documentação/img/RUN_POD.png)
 
-## Bibliotecas Externas Usadas
-- `Library Manager` se refere ao gerenciador de bibliotecas 
-padrão do arduino, só procurar os nomes das bibliotecas na barra de pesquisa.
+## Project Overview 
+RunPod é um projeto de desenvolvimento de um dispositivo eletrônico capaz de detectar passadas de uma pessoa em uma 
+em uma esteria.
 
-|Nome                  |             Links|
+## Tecnologias Utilizadas
+
+### Eletrônica
+|Tipo                  |             Nome|
 |----------------------|------------------|
-|  `Adafruit_MPU6050`  | Library Manager  |
-|  `Adafruit_Sensor`   |   Library Manager|
-|  `LinkedList`        |  [LINK](https://github.com/ivanseidel/LinkedList) |
-|  `Gaussian` & `Gaussian Average`|[LINK](https://github.com/ivanseidel/Gaussian)
+|  Sensor  | `MPU 6050`  |
+|  Módulo    |   `HM-10`|
+|  Controlador        |  `AtTiny - 85` |
 
-## Bibliotecas Padrão Usadas
-- Bibliotecas padrão do arduino que já estão pré instaladas.
+### Datas 
+- Início - `020`
 
-|Nome                  |         Status       |
-|----------------------|----------------------|
-|  `array`             | Pré instalado        |
-|  `cmath`             | Pré instalado        |
+- Fim - `...`
+
+### Membros
+- Nati - `ECA020`
+- Pedro - `ECA020`
+- Luíz - `ECA019`
